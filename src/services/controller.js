@@ -1,50 +1,36 @@
 const { Controller } = require('../models')
+const { Op } = require('sequelize')
+const { filterObjUndefined } = require('../utils')
 
 /**
- * 查 command
- * @param {*} param0
+ * find controller
  */
-function getController({ status, name, keyword, type, offset, limit }) {
-  const where = { status, name, keyword, type, offset, limit }
-  const options = {}
-  offset !== undefined && (options.offset = Number(offset))
-  limit !== undefined && (options.limit = Number(limit))
-
+function findController({ status, name, controllerType, keyword }, pagination = null, order = []) {
+  const where = filterObjUndefined({ status, name, controllerType })
+  if (keyword) where.name = { [Op.like]: `%${keyword}%` }
+  const options = { where, ...pagination, order }
   return Controller.findAndCountAll(options)
 }
 
 /**
- * 插入 command
- * @param {*} param0
+ * upsert controller
  */
-function insertController({ name, descript, keyword, type, ControllerHandlerId, controllerChatId, global, status }) {
-  return Controller.create({ name, descript, keyword, type, ControllerHandlerId, controllerChatId, global, status })
+function upsertController(id, { name, descript, controllerType, ControllerHandlerId, controllerChatId, global, status }) {
+  const controller = filterObjUndefined({ name, descript, controllerType, ControllerHandlerId, controllerChatId, global, status })
+  if (id && typeof id !== 'object') return Controller.create(controller)
+  else return Controller.update(controller, { where: { id } })
 }
 
 /**
- * 更新 command
- * @param {*} id
- * @param {*} param1
+ * delete controller
  */
-function updatetController(id, { name, descript, keyword, type, ControllerHandlerId, controllerChatId, global, status }) {
-  return Controller.update(
-    { name, descript, keyword, type, ControllerHandlerId, controllerChatId, global, status },
-    { where: { id } }
-  )
-}
-
-/**
- * 删除 command
- * @param {*} ids
- */
-function deleteController(ids) {
-  const options = { where: { id: ids } }
+function deleteController(id) {
+  const options = { where: { id } }
   return Controller.destroy(options)
 }
 
 module.exports = {
-  getController,
-  insertController,
-  updatetController,
+  findController,
+  upsertController,
   deleteController,
 }

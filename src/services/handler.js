@@ -1,68 +1,51 @@
 const { Handler } = require('../models')
+const { Op } = require('sequelize')
+const { filterObjUndefined } = require('../utils')
 
-let activeCommands = []
+let activeHandler = []
 
-applyCommands()
-function applyCommands() {
-  return getHandler({ status: 1 }).then(res => {
-    activeCommands = res.rows
+applyHandler()
+
+/**
+ * find handler status = 1
+ */
+function applyHandler() {
+  return findHandler({ status: 1 }).then(res => {
+    activeHandler.length = 0
+    activeHandler.push(...res.rows)
   })
 }
 
 /**
- * 查 command
- * @param {*} param0
+ * find handler
  */
-function getHandler({ status, name, keyword, offset, limit }) {
-  const where = {}
-  status !== undefined && (where.status = status)
-  name !== undefined && (where.name = name)
-  keyword !== undefined && (where.keyword = keyword)
-
-  const options = { where }
-  offset !== undefined && (options.offset = Number(offset))
-  limit !== undefined && (options.limit = Number(limit))
-
+function findHandler({ status, name, keyword }, pagination = null, order = []) {
+  const where = filterObjUndefined({ status, name, keyword })
+  if (keyword) where.name = { [Op.like]: `%${keyword}%` }
+  const options = { where, ...pagination, order }
   return Handler.findAndCountAll(options)
 }
 
 /**
- * 插入 command
- * @param {*} param0
+ * upsert handler
  */
-function insertHandler({ name, keyword, descript, script, timeout, status }) {
-  return Handler.create({ name, keyword, descript, script, timeout, status })
+function upsertHandler(id, { name, keyword, descript, script, timeout, status }) {
+  const hadnler = filterObjUndefined({ name, keyword, descript, script, timeout, status })
+  if (id && typeof id !== 'object') return Handler.update(hadnler, { where: { id } })
+  else return Handler.create(hadnler)
 }
 
 /**
- * 更新 command
- * @param {*} id
- * @param {*} param1
+ * delete handler
  */
-function updatetHandler(id, { name, keyword, descript, script, timeout, status }) {
-  const updateValues = {}
-  name !== undefined && (updateValues.name = name)
-  keyword !== undefined && (updateValues.keyword = keyword)
-  descript !== undefined && (updateValues.descript = descript)
-  script !== undefined && (updateValues.script = script)
-  timeout !== undefined && (updateValues.timeout = timeout)
-  status !== undefined && (updateValues.status = status)
-  return Handler.update({ name, keyword, descript, script, timeout, status }, { where: { id } })
-}
-
-/**
- * 删除 command
- * @param {*} ids
- */
-function deleteHandler(ids) {
-  const options = { where: { id: ids } }
+function deleteHandler(id) {
+  const options = { where: { id } }
   return Handler.destroy(options)
 }
 
 module.exports = {
-  activeCommands,
-  getHandler,
-  insertHandler,
-  updatetHandler,
+  activeHandler,
+  findHandler,
+  upsertHandler,
   deleteHandler,
 }

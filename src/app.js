@@ -10,10 +10,8 @@ app.use(log4js.connectLogger(logger, { level: 'INFO' }))
 // urlencode
 app.use(express.urlencoded({ extended: false }))
 
-// route
-app.use('/api/v1/workWechat', require('./controls/work_wechat'))
-app.use('/api/v1/sentry', require('./controls/sentry'))
-app.use('/api/v1/git', require('./controls/git'))
+// wx
+app.use('/api/v1/receive', require('./controls/receive'))
 
 // web
 app.use('/api/v1/handler', require('./controls/handler'))

@@ -2,8 +2,8 @@ const router = require('express').Router()
 const aes = require('wx-ding-aes')
 const bodyParser = require('body-parser')
 require('body-parser-xml')(bodyParser)
-const { signature, decodemsg, formatmsg, logReceviedMsg } = require('../middlewares/work_wechat')
-const { handleMessage } = require('../services/work_wechat')
+const { signature, decodemsg, formatmsg, logReceviedMsg } = require('../middlewares/receive')
+const { handleMessage } = require('../services/receive')
 
 // 企业微信验证回调接口
 router.get(
@@ -11,9 +11,13 @@ router.get(
   signature(process.env.TOKEN),
 
   (req, res, next) => {
-    const echostr = req.query.echostr
-    const msg = aes.decode(echostr, process.env.ENCODE_AES_KEY)
-    res.send(msg)
+    try {
+      const echostr = req.query.echostr
+      const msg = aes.decode(echostr, process.env.ENCODE_AES_KEY)
+      res.send(msg)
+    } catch (e) {
+      next(e)
+    }
   }
 )
 
@@ -28,8 +32,12 @@ router.post(
   logReceviedMsg,
 
   (req, res, next) => {
-    handleMessage(req.msg)
-    res.send('')
+    try {
+      handleMessage(req.msg)
+      res.send('')
+    } catch (e) {
+      next(e)
+    }
   }
 )
 
