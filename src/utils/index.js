@@ -1,22 +1,19 @@
-function parseOrder(orderBy, orderDesc) {
-  if (!orderBy || !orderDesc) return []
+function parseOrder(sortBy, sortDesc) {
+  if (!sortBy || !sortDesc) return []
+  if (sortBy.length !== sortDesc.length) throw new Error('Error query sortBy or sortDesc')
+  if (sortBy.length === 0) return []
 
-  orderBy = orderBy.split(',')
-  orderDesc = orderDesc.split(',')
-  if (orderBy.length !== orderDesc.length) throw new Error('Error query orderBy or orderDesc')
-  if (orderBy.length === 0) return []
-
-  return orderBy.map((key, idx) => {
-    const val = orderDesc[idx]
-    const direction = val === '' ? 'NULLS' : val ? 'DESC' : 'ASC'
+  return sortBy.map((key, idx) => {
+    const val = sortDesc[idx]
+    const direction = val === 'true' ? 'DESC' : 'ASC'
     return [key, direction]
   })
 }
 
-function parsePagination(page = 1, pageSize = 10) {
-  pageSize = pageSize > 1000 ? 1000 : pageSize
-  const offset = (page - 1) * pageSize
-  const limit = pageSize
+function parsePagination(page = 1, itemsPerPage = 10) {
+  itemsPerPage = itemsPerPage > 1000 ? 1000 : itemsPerPage
+  const offset = (page - 1) * itemsPerPage
+  const limit = Number(itemsPerPage)
   return { offset, limit }
 }
 

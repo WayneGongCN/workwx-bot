@@ -1,24 +1,33 @@
-const { Controller } = require('../models')
+const { Controller, Group, Handler, sequelize } = require('../models')
 const { Op } = require('sequelize')
 const { filterObjUndefined } = require('../utils')
+
+const include = [
+  { model: Group, as: 'groups' },
+  { model: Handler, as: 'handlers' },
+]
 
 /**
  * find controller
  */
-function findController({ status, name, controllerType, keyword }, pagination = null, order = []) {
-  const where = filterObjUndefined({ status, name, controllerType })
+function findController({ controllerType, status, global, name, keyword }, pagination = null, order = []) {
+  const where = filterObjUndefined({ controllerType, status, global, name })
   if (keyword) where.name = { [Op.like]: `%${keyword}%` }
-  const options = { where, ...pagination, order }
+  const options = { where, ...pagination, order, include }
   return Controller.findAndCountAll(options)
 }
 
 /**
  * upsert controller
  */
-function upsertController(id, { name, descript, controllerType, ControllerHandlerId, controllerChatId, global, status }) {
-  const controller = filterObjUndefined({ name, descript, controllerType, ControllerHandlerId, controllerChatId, global, status })
-  if (id && typeof id !== 'object') return Controller.create(controller)
-  else return Controller.update(controller, { where: { id } })
+function upsertController({ name, controllerType, descript, status, global, groups, handlers }, id = null) {
+  const controller = filterObjUndefined({ id, name, controllerType, descript, status, global })
+  return sequelize.transaction(async transaction => {
+    let controllerInstance = await Controller.upsert(controller, { transaction }).then(res => res[0])
+    await controllerInstance.setGroups(groups, { transaction })
+    await controllerInstance.setHandlers(handlers, { transaction })
+    return controllerInstance.reload()
+  })
 }
 
 /**

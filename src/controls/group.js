@@ -1,29 +1,24 @@
 const router = require('express').Router()
 const bodyParser = require('body-parser')
-const cors = require('cors')
-const { getGroup, insertGroup, updatetGroup, deleteGroup, getGroupLikeName } = require('../services/group')
+const { findGroup, upsertGroup, deleteGroup } = require('../services/group')
+const { parsePagination, parseOrder } = require('../utils')
 
+const cors = require('cors')
 router.use(bodyParser.json())
 router.use(cors())
 
 router.get('/', (req, res, next) => {
-  const query = req.query
-  getGroup(query)
+  const { name, keyword, page, itemsPerPage, sortBy, sortDesc } = req.query
+  const pagination = parsePagination(page, itemsPerPage)
+  const order = parseOrder(sortBy, sortDesc)
+  findGroup({ name, keyword }, pagination, order)
     .then(data => res.json(data))
     .catch(next)
 })
 
 router.post('/', (req, res, next) => {
   const group = req.body
-  insertGroup(group)
-    .then(data => res.status(201).json(data))
-    .catch(next)
-})
-
-router.patch('/:groupId', (req, res, next) => {
-  const { groupId } = req.params
-  const group = req.body
-  updatetGroup(groupId, group)
+  upsertGroup(group)
     .then(data => res.status(201).json(data))
     .catch(next)
 })
@@ -31,7 +26,7 @@ router.patch('/:groupId', (req, res, next) => {
 router.put('/:groupId', (req, res, next) => {
   const { groupId } = req.params
   const group = req.body
-  updatetGroup(groupId, group)
+  upsertGroup(group, groupId)
     .then(data => res.status(201).json(data))
     .catch(next)
 })
@@ -43,13 +38,6 @@ router.delete('/:groupId', (req, res, next) => {
     .then(() => {
       res.sendStatus(204)
     })
-    .catch(next)
-})
-
-router.get('/like', (req, res, next) => {
-  const query = req.query
-  getGroupLikeName(query)
-    .then(data => res.json(data))
     .catch(next)
 })
 

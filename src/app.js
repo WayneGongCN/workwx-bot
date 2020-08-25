@@ -12,6 +12,8 @@ app.use(express.urlencoded({ extended: false }))
 
 // wx
 app.use('/api/v1/receive', require('./controls/receive'))
+// http
+app.use('/api/v1/httphook', require('./controls/httphook'))
 
 // web
 app.use('/api/v1/handler', require('./controls/handler'))

@@ -3,9 +3,9 @@ const Sequelize = require('sequelize').Sequelize
 const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USERNAME, process.env.DB_PASSWORD, {
   host: process.env.DB_HOST,
   dialect: 'mysql',
-  // dialectOptions: {
-  //   socketPath: '/tmp/mysql.sock',
-  // },
+  dialectOptions: {
+    socketPath: '/tmp/mysql.sock',
+  },
 })
 
 class Chat extends Sequelize.Model {}
@@ -17,7 +17,7 @@ Chat.init(
       primaryKey: true,
       comment: '会话 id',
     },
-    chatName: {
+    name: {
       type: Sequelize.CHAR(64),
       allwoNull: true,
     },
@@ -112,21 +112,20 @@ Controller.init(
       type: Sequelize.CHAR(32),
       allwoNull: false,
     },
-    descript: {
-      type: Sequelize.CHAR(255),
-      allwoNull: true,
-      defaultValue: '',
-    },
     controllerType: {
       type: Sequelize.INTEGER(),
       allwoNull: false,
       comment: '0 Message，1 Http',
     },
-    global: {
-      type: Sequelize.BOOLEAN,
-      defaultValue: false,
+    descript: {
+      type: Sequelize.CHAR(255),
+      allwoNull: true,
+      defaultValue: '',
     },
-
+    global: {
+      type: Sequelize.INTEGER(),
+      defaultValue: 0,
+    },
     status: {
       type: Sequelize.INTEGER(),
       allwoNull: false,
@@ -183,9 +182,15 @@ const HandlerGroup = sequelize.define('HandlerGroup', {}, { underscored: true, t
 
 // ----------------------------------------------------------------------------
 
+// User:Message 1:N
+User.hasMany(Message, { foreignKey: 'userId', targetKey: 'userId', as: 'messages' })
+// Message:User N:1
+Message.belongsTo(User, { foreignKey: 'userId', targetKey: 'userId', as: 'user' })
+
 // Chat:Message 1:N
-Chat.hasMany(Message, { foreignKey: 'chatId', targetKey: 'chatId' })
-Message.belongsTo(Chat, { foreignKey: 'chatId', targetKey: 'chatId' })
+Chat.hasMany(Message, { foreignKey: 'chatId', targetKey: 'chatId', as: 'messages' })
+// Message:Chat N:1
+Message.belongsTo(Chat, { foreignKey: 'chatId', targetKey: 'chatId', as: 'chat' })
 
 // Chat:User N:M
 Chat.belongsToMany(User, { through: ChatUser, foreignKey: 'chatId', otherKey: 'userId', as: 'users' })
@@ -196,16 +201,16 @@ Chat.belongsToMany(Group, { through: ChatGroup, foreignKey: 'chatId', otherKey: 
 Group.belongsToMany(Chat, { through: ChatGroup, foreignKey: 'groupId', otherKey: 'chatId', as: 'chats' })
 
 // Controller:Group N:M
-Controller.belongsToMany(Group, { through: ControllerGroup, foreignKey: 'ControllerId', otherKey: 'groupId', as: 'groups' })
-Group.belongsToMany(Controller, { through: ControllerGroup, foreignKey: 'groupId', otherKey: 'ControllerId', as: 'controllers' })
+Controller.belongsToMany(Group, { through: ControllerGroup, foreignKey: 'controllerId', otherKey: 'groupId', as: 'groups' })
+Group.belongsToMany(Controller, { through: ControllerGroup, foreignKey: 'groupId', otherKey: 'controllerId', as: 'controllers' })
 
 // Controller:Handler N:M
-Controller.belongsToMany(Handler, { through: ControllerHandler, foreignKey: 'controllerId', otherKey: 'handlers' })
-Handler.belongsToMany(Controller, { through: ControllerHandler, foreignKey: 'handlerId', otherKey: 'controllers' })
+Controller.belongsToMany(Handler, { through: ControllerHandler, foreignKey: 'controllerId', otherKey: 'handlerId', as: 'handlers' })
+Handler.belongsToMany(Controller, { through: ControllerHandler, foreignKey: 'handlerId', otherKey: 'controllerId', as: 'controllers' })
 
 // Controller:Group N:M
-Handler.belongsToMany(Group, { through: HandlerGroup, foreignKey: 'HandlerId', otherKey: 'groupId', as: 'groups' })
-Group.belongsToMany(Handler, { through: HandlerGroup, foreignKey: 'groupId', otherKey: 'HandlerId', as: 'handlers' })
+Handler.belongsToMany(Group, { through: HandlerGroup, foreignKey: 'handlerId', otherKey: 'groupId', as: 'groups' })
+Group.belongsToMany(Handler, { through: HandlerGroup, foreignKey: 'groupId', otherKey: 'handlerId', as: 'handlers' })
 
 // ----------------------------------------------------------------------------
 

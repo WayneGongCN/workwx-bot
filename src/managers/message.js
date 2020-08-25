@@ -1,4 +1,5 @@
 const axios = require('axios')
+const logger = require('../log')
 
 class Message {
   constructor(option) {
@@ -25,11 +26,7 @@ class Message {
   }
 
   send() {
-    if (
-      (this.msgtype === 'text' && !this.text.content) ||
-      (this.msgtype === 'markdwon' && !this.markdown.content) ||
-      !this.chatid
-    )
+    if ((this.msgtype === 'text' && !this.text.content) || (this.msgtype === 'markdwon' && !this.markdown.content) || !this.chatid)
       throw new Error('Error Message')
 
     return axios.post(process.env.WEB_HOOK_URL, this).then(res => {
@@ -54,7 +51,7 @@ class TextMessage extends Message {
   }
 
   content(val) {
-    this.text.content = val
+    this.text.content = String(val)
     return this
   }
 
@@ -84,7 +81,7 @@ class MdMessage extends Message {
   }
 
   content(val) {
-    this.markdown.content = val
+    this.markdown.content = String(val)
     return this
   }
 

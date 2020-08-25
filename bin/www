@@ -13,7 +13,7 @@ const logger = require('../src/log')
  * Get port from environment and store in Express.
  */
 
-var port = normalizePort(process.env.PORT || process.env.SERVER_PORT)
+var port = normalizePort(process.env.PORT)
 app.set('port', port)
 
 /**

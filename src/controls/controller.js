@@ -1,29 +1,25 @@
 const router = require('express').Router()
 const bodyParser = require('body-parser')
-const cors = require('cors')
-const { getController, insertController, updatetController, deleteController } = require('../services/controller')
+const { findController, upsertController, deleteController } = require('../services/controller')
+const { parsePagination, parseOrder } = require('../utils')
 
+const cors = require('cors')
 router.use(bodyParser.json())
 router.use(cors())
 
 router.get('/', (req, res, next) => {
-  const query = req.query
-  getController(query)
+  const { controllerType, status, global, name, keyword, page, itemsPerPage, sortBy, sortDesc } = req.query
+  const pagination = parsePagination(page, itemsPerPage)
+  const order = parseOrder(sortBy, sortDesc)
+
+  findController({ controllerType, status, global, name, keyword }, pagination, order)
     .then(data => res.json(data))
     .catch(next)
 })
 
 router.post('/', (req, res, next) => {
   const controller = req.body
-  insertController(controller)
-    .then(data => res.status(201).json(data))
-    .catch(next)
-})
-
-router.patch('/:controllerId', (req, res, next) => {
-  const { controllerId } = req.params
-  const controller = req.body
-  updatetController(controllerId, controller)
+  upsertController(controller)
     .then(data => res.status(201).json(data))
     .catch(next)
 })
@@ -31,7 +27,7 @@ router.patch('/:controllerId', (req, res, next) => {
 router.put('/:controllerId', (req, res, next) => {
   const { controllerId } = req.params
   const controller = req.body
-  updatetController(controllerId, controller)
+  upsertController(controller, controllerId)
     .then(data => res.status(201).json(data))
     .catch(next)
 })

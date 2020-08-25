@@ -1,29 +1,25 @@
 const router = require('express').Router()
 const bodyParser = require('body-parser')
-const cors = require('cors')
-const { getHandler, insertHandler, updatetHandler, deleteHandler } = require('../services/handler')
+const { findHandler, upsertHandler, deleteHandler } = require('../services/handler')
+const { parsePagination, parseOrder } = require('../utils')
 
+const cors = require('cors')
 router.use(bodyParser.json())
 router.use(cors())
 
 router.get('/', (req, res, next) => {
-  const query = req.query
-  getHandler(query)
+  const { name, status, keyword, page, itemsPerPage, sortBy, sortDesc } = req.query
+  const pagination = parsePagination(page, itemsPerPage)
+  const order = parseOrder(sortBy, sortDesc)
+
+  findHandler({ name, status, keyword }, pagination, order)
     .then(data => res.json(data))
     .catch(next)
 })
 
 router.post('/', (req, res, next) => {
   const handler = req.body
-  insertHandler(handler)
-    .then(data => res.status(201).json(data))
-    .catch(next)
-})
-
-router.patch('/:handlerId', (req, res, next) => {
-  const { handlerId } = req.params
-  const handler = req.body
-  updatetHandler(handlerId, handler)
+  upsertHandler(handler)
     .then(data => res.status(201).json(data))
     .catch(next)
 })
@@ -31,7 +27,7 @@ router.patch('/:handlerId', (req, res, next) => {
 router.put('/:handlerId', (req, res, next) => {
   const { handlerId } = req.params
   const handler = req.body
-  updatetHandler(handlerId, handler)
+  upsertHandler(handler, handlerId)
     .then(data => res.status(201).json(data))
     .catch(next)
 })

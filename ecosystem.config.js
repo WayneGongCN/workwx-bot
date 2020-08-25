@@ -1,3 +1,4 @@
+require('dotenv').config()
 module.exports = {
   apps: [
     {
@@ -5,7 +6,7 @@ module.exports = {
       script: 'bin/www',
       max_memory_restart: '100M',
 
-      watch: true,
+      watch: false,
       ignore_watch: ['node_modules', '.git', '*.log'],
     },
   ],

@@ -1,21 +1,17 @@
 const router = require('express').Router()
 const bodyParser = require('body-parser')
-const cors = require('cors')
-const { getUser, getUserLikeNameAlias } = require('../services/user')
+const { findUser } = require('../services/user')
+const { parsePagination, parseOrder } = require('../utils')
 
+const cors = require('cors')
 router.use(bodyParser.json())
 router.use(cors())
 
 router.get('/', (req, res, next) => {
-  const query = req.query
-  getUser(query)
-    .then(data => res.json(data))
-    .catch(next)
-})
-
-router.get('/like', (req, res, next) => {
-  const query = req.query
-  getUserLikeNameAlias(query)
+  const { userId, name, alias, keyword, page, itemsPerPage, sortBy, sortDesc } = req.query
+  const pagination = parsePagination(page, itemsPerPage)
+  const order = parseOrder(sortBy, sortDesc)
+  findUser({ userId, name, alias, keyword }, pagination, order)
     .then(data => res.json(data))
     .catch(next)
 })
